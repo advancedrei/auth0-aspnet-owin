@@ -2,10 +2,10 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>Auth0-ASPNET-Owin-Libs</id>
-    <version>1.0.1</version>
-    <title>Configure Auth0 with ASP.NET 4.5 (Owin) - Libraries Only</title>
-    <authors>Auth0</authors>
-    <owners>Auth0</owners>
+    <version>1.1.0</version>
+    <title>Auth0 + ASP.NET 4.5 (Owin)</title>
+    <authors>Auth0, AdvancedREI</authors>
+    <owners>Auth0, AdvancedREI</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/auth0/auth0-aspnet-owin</projectUrl>
     <iconUrl>http://secure.gravatar.com/avatar/805765c256ff8617fcad483b5476faf2</iconUrl>
@@ -20,14 +20,15 @@
       <group targetFramework=".NETFramework4.5">
         <dependency id="Microsoft.Owin" version="3.0.1"  />
         <dependency id="Microsoft.Owin.Security" version="3.0.1" />
-        <dependency id="Newtonsoft.Json" version="7.0.1" />
+        <dependency id="Newtonsoft.Json" version="9.0.1" />
         <dependency id="Owin" version="1.0" />
       </group>
     </dependencies>
   </metadata>
   <files>
-    <file src="content\net45\web.config.install.xdt" target="content\net45\web.config.install.xdt" />
-    <file src="..\src\Auth0.Owin\bin\release\Auth0.Owin.dll" target="lib\net45\Auth0.Owin.dll" />
-    <file src="README-Libs.txt" target="README.txt" />
+    <file src="..\src\Auth0.Owin\bin\Release\Auth0.Owin.dll" target="lib\net45\" />
+    <file src="..\src\Auth0.Owin\bin\Release\Auth0.Owin.pdb" target="lib\net45\" />
+    <file src="..\src\Auth0.Owin\bin\Release\Auth0.Owin.xml" target="lib\net45\" />
+    <file src="..\src\Auth0.Owin\**\*.cs" exclude="**\obj\**\*.*" target="src" />
   </files>
 </package>
