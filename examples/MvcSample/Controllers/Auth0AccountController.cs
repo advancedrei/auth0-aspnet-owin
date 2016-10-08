@@ -2,6 +2,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
 using System;
 using System.Configuration;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
@@ -22,9 +23,14 @@ namespace MvcSample.Controllers
         //
         // GET: /Auth0Account/ExternalLoginCallback
         [AllowAnonymous]
-        public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
+        public async Task<ActionResult> ExternalLoginCallback(string returnUrl, string error)
         {
-            AuthenticationManager.SignOut();
+            AuthenticationManager.SignOut(DefaultAuthenticationTypes.ExternalCookie);
+
+            if (error == "access_denied")
+            {
+                return View("AccessDenied");
+            }
 
             var externalIdentity = await AuthenticationManager.GetExternalIdentityAsync(DefaultAuthenticationTypes.ExternalCookie);
             if (externalIdentity == null)
@@ -42,7 +48,8 @@ namespace MvcSample.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult LogOff(string returnUrl)
         {
-            AuthenticationManager.SignOut();
+            var appTypes = AuthenticationManager.GetAuthenticationTypes().Select(at => at.AuthenticationType).ToArray();
+            AuthenticationManager.SignOut(appTypes);
 
             var absoluteReturnUrl = string.IsNullOrEmpty(returnUrl) ?
                 this.Url.Action("Index", "Home", new { }, this.Request.Url.Scheme) :
@@ -50,7 +57,7 @@ namespace MvcSample.Controllers
                     new Uri(this.Request.Url, returnUrl).AbsoluteUri : returnUrl;
 
             return Redirect(
-                string.Format("https://{0}/logout?returnTo={1}",
+                string.Format("https://{0}/v2/logout?returnTo={1}",
                     ConfigurationManager.AppSettings["auth0:Domain"],
                     absoluteReturnUrl));
         }

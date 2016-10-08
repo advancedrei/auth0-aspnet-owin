@@ -1,149 +1,67 @@
-Owin/Katana Authentication Handler for Auth0. Plug into the ASP.NET 4.5 Owin infrastructure (middleware) and extends default providers with more social providers like Amazon, Facebook, GitHub, LinkedIn, LiveId Google, Twitter, Paypal, vKontakte and Enterprise provides like any IdP that speaks SAML Protocol, ADFS, Google Apps, ADFS, Windows Azure AD, etc. 
+Owin/Katana Authentication Handler for Auth0. Plugs into the ASP.NET 4.5 Owin infrastructure (middleware) and extends default providers with more social providers such as Amazon, Facebook, GitHub, LinkedIn, LiveId, Google, Twitter, PayPal and vKontakte. Also integrates with Enterprise providers like any IdP that speaks SAML Protocol, ADFS, Google Apps, ADFS, Windows Azure AD, etc.
 
+> Note: ASP.NET Core support is available in the following repository https://github.com/auth0/auth0-aspnetcore
+
+## Quickstart
+
+You can find the ASP.NET (OWIN) quickstart which utilizes this package on the Auth0 Documentation Website at [https://auth0.com/docs/quickstart/webapp/aspnet-owin/](https://auth0.com/docs/quickstart/webapp/aspnet-owin/)
+ 
 ## Installation
 
-	Install-Package Auth0-ASPNET-Owin
+For using inside an ASP.NET MVC project you can install the `Auth0-ASPNET-Owin` package:
+
+```
+Install-Package Auth0-ASPNET-Owin
+```
+
+The package above also installs an MVC controller which handles the callback from the server. If you want to use just the OWIN middleware, without any dependencies on MVC, then you can use the `Auth0-ASPNET-Owin-Libs` package: 
+
+```
+Install-Package Auth0-ASPNET-Owin-Libs
+```
 
 ## Usage
 
-1- Create a new ASP.NET 4.5 Project.
+[Please see this NuGet's README.](nuget/README.txt)
 
-2- Go to Web.config and set `auth0:ClientId`, `auth0:ClientSecret` and `auth0:Domain` from appSettings.
+## Katana issue with cookies
 
-> Note: These settings can be found on <a href="http://app.auth0.com" target="_new">Auth0 dashboard</a>.
+There is an bug with the Katana OWIN implementation (Microsoft.Owin.Host.SystemWeb), that causes cookies set in an OWIN middleware to sometimes disappear. This results in the authentication flow not being able to complete. The sympton in this case is that the `AuthenticationManager.GetExternalLoginInfo()` or similar calls that depend on a cookie being set will fail. 
 
-3- Edit `App_Start\Startup.Auth.cs` in order to call the `UseAuth0Authentication` extension method:
+The issue is described [here](https://katanaproject.codeplex.com/workitem/197), and the current workaround is installing the [Kentor.OwinCookieSaver package](https://www.nuget.org/packages/Kentor.OwinCookieSaver/). 
 
-~~~c#
-public void ConfigureAuth(IAppBuilder app)
-{
-	// Enable the application to use a cookie to store information for the signed in user
-    app.UseCookieAuthentication(new CookieAuthenticationOptions
-    {
-        AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
-        LoginPath = new PathString("/Account/Login")
-		// LoginPath property informs the middleware that it should change an outgoing 401 Unauthorized status code into a 302 redirection onto the given login path
-		// More info: http://msdn.microsoft.com/en-us/library/microsoft.owin.security.cookies.cookieauthenticationoptions.loginpath(v=vs.111).aspx
-    });
-    
-    // Use a cookie to temporarily store information about a user logging in with a third party login provider
-    app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
+First install the package:
 
-    // ...
-    
-    app.UseAuth0Authentication(
-    	clientId:       System.Configuration.ConfigurationManager.AppSettings["auth0:ClientId"],
-    	clientSecret:   System.Configuration.ConfigurationManager.AppSettings["auth0:ClientSecret"],
-    	domain:         System.Configuration.ConfigurationManager.AppSettings["auth0:Domain"]);
-}
-~~~
+```
+Install-Package Kentor.OwinCookieSaver
+```
 
-> Note: The nuget provides a simple controller (_Auth0AccountController_) to process the authentication response from Auth0. If you want to use your own controller, make sure you set the `redirectPath` parameter. For example, in order to use the implementation provided by Visual Studio templates, use the following: `redirectPath: "/Account/ExternalLoginCallback"`.
+and then configure the middleware. The `Kentor.OwinCookieSaver` middleware should be added before other cookie handling middleware:
 
-4- Include the <a href="https://docs.auth0.com/login-widget2" target="_new">Auth0 Widget</a>:
+```
+app.UseKentorOwinCookieSaver();
 
-~~~html
-<a href="javascript:widget.signin();">Login</a>
+app.UseCookieAuthentication(new CookieAuthenticationOptions(...));
+```
 
-<script src="https://d19p4zemcycm7a.cloudfront.net/w2/auth0-widget-2.3.min.js"></script>
-<script type="text/javascript">
-	var widget = new Auth0Widget({
-	    domain:       '@System.Configuration.ConfigurationManager.AppSettings["auth0:Domain"]',
-	    clientID:     '@System.Configuration.ConfigurationManager.AppSettings["auth0:ClientId"]',
-	    callbackURL:  'http://localhost:PORT/signin-auth0'
-	});
-</script>
-~~~
+Further details are provided at https://github.com/KentorIT/owin-cookie-saver.
 
-> Note: Once user is authenticated, you can access his profile by doing:
+## Examples
 
-~~~js
-@if (Request.IsAuthenticated)
-{
-	var id_token = "@ClaimsPrincipal.Current.FindFirst("id_token").Value";
-	var email = "@ClaimsPrincipal.Current.FindFirst(ClaimTypes.Email).Value";
-	
-	// ...
-}
-~~~
+In this repository we've also included different Owin samples, using the Auth0 Authentication Handler or standards based (Bearer token, OpenID Connect, ...) handlers.
 
-## Customizing the Claims Identity
+ - [ASP.NET 4 - MVC sample with Auth0-ASPNET-OWIN](https://github.com/auth0/auth0-aspnet-owin/tree/master/examples/MvcSample)
+ - [ASP.NET 4 - MVC seed project with Auth0-ASPNET-OWIN](https://github.com/auth0/auth0-aspnet-owin/tree/master/examples/basic-mvc-sample)
+ - [ASP.NET 4 - Web API sample with Bearer Tokens](https://github.com/auth0/auth0-aspnet-owin/tree/master/examples/WebApi)
 
-You can change/add new claims by attaching to `OnAuthenticated`:
+## Issue Reporting
 
-~~~c#
-var provider = new Auth0.Owin.Auth0AuthenticationProvider
-{
-	OnAuthenticated = (context) =>
-	{
-	// These are examples of adding additional claims. Comment them out if you're not going to use them.
-		// context.User is a JObject with the original user object from Auth0
-		context.Identity.AddClaim(new Claim("foo", "bar"));
-		context.Identity.AddClaim(
-		new Claim(
-			"friendly_name",
-			string.Format("{0}, {1}", context.User["family_name"], context.User["given_name"])));
-		
-		return System.Threading.Tasks.Task.FromResult(0);
-	}
-};
+If you have found a bug or if you have a feature request, please report them at this repository issues section. Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://auth0.com/whitehat) details the procedure for disclosing security issues.
 
-// specify the provider
-app.UseAuth0Authentication(provider: provider, clientId: ... );
-~~~
+## Author
 
-## Cross Site Request Forgery
+[Auth0](auth0.com)
 
-You can validate the xsrf value by attaching to `OnReturnEndpoint`:
+## License
 
-~~~c#
-var provider = new Auth0.Owin.Auth0AuthenticationProvider
-{
-	OnReturnEndpoint = (context) =>
-	{
-		// xsrf validation
-		if (context.Request.Query["state"] != null && context.Request.Query["state"].Contains("xsrf="))
-		{
-			var state = HttpUtility.ParseQueryString(context.Request.Query["state"]);
-			if (state["xsrf"] != "your_xsrf_random_string")
-			{
-				throw new HttpException(400, "invalid xsrf");
-			}
-		}
-		
-		return System.Threading.Tasks.Task.FromResult(0);
-	}
-};
-
-// specify the provider
-app.UseAuth0Authentication(provider: provider, clientId: ... );
-~~~
-
-And set same value when the widget is shown:
-
-~~~html
-<a href="javascript:showWidget();">Login</a>
-
-<script type="text/javascript">
-	var widget = new Auth0Widget({
-        domain:       '@System.Configuration.ConfigurationManager.AppSettings["auth0:Domain"]',
-        clientID:     '@System.Configuration.ConfigurationManager.AppSettings["auth0:ClientId"]',
-        callbackURL:  'http://localhost:PORT/signin-auth0'
-    });
-
-    function showWidget() {
-        var xsrf = 'your_xsrf_random_string';
-        var returnUrl = window.location.pathname;
-
-        widget.signin({
-            state: 'xsrf=' + xsrf + '&ru=' + returnUrl
-        });
-    }
-</script>
-~~~
-
-Contributors
-=============
-
-* Robert McLaws ([@robertmclaws](https://twitter.com/robertmclaws) - AdvancedREI) 
-
+This project is licensed under the MIT license. See the [LICENSE](LICENSE) file for more info.
