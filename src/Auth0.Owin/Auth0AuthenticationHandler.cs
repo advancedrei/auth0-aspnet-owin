@@ -33,7 +33,7 @@ namespace Auth0.Owin
         private static readonly string[] ClaimTypesForGivenName = { "givenname", "firstname" };
         private static readonly string[] ClaimTypesForFamilyName = { "familyname", "lastname", "surname" };
         private static readonly string[] ClaimTypesForPostalCode = { "postalcode" };
-        private static readonly string[] ClaimsToExclude = { "iss", "sub", "aud", "exp", "iat", "identities" };
+        private static readonly string[] ClaimsToExclude = { "iss", "sub", "aud", "iat", "identities" };
 
         private readonly ILogger _logger;
         private readonly HttpClient _httpClient;
@@ -81,11 +81,11 @@ namespace Auth0.Owin
                     code);
 
                 var body = new Dictionary<string, string> {
-                    { "client_id", Options.ClientId },
-                    { "redirect_uri", GenerateRedirectUri(properties) },
-                    { "client_secret", Options.ClientSecret },
-                    { "code", Uri.EscapeDataString(code) },
-                    { "grant_type", "authorization_code" }
+                    ["client_id"] = Options.ClientId,
+                    ["redirect_uri"] = GenerateRedirectUri(properties),
+                    ["client_secret"] = Options.ClientSecret,
+                    ["code"] = Uri.EscapeDataString(code),
+                    ["grant_type"] = "authorization_code"
                 };
 
                 //RWM: Use Auth0.Portable instead and replace these calls with API calls.
@@ -256,6 +256,14 @@ namespace Auth0.Owin
             if (name == "gender")
             {
                 return ClaimTypes.Gender;
+            }
+            if (name == "exp")
+            {
+                return ClaimTypes.Expiration;
+            }
+            if (name == "actor")
+            {
+                return ClaimTypes.Actor;
             }
 
             return name;
