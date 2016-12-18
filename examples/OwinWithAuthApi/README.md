@@ -40,7 +40,7 @@ var auth = new Auth0.AuthenticationApi.AuthenticationApiClient(new Uri("https://
 Next, you can authenticate the user:
 
 ```
-var authResponse = await auth.Authenticate(new AuthenticationRequest
+var authResponse = await auth.AuthenticateAsync(new AuthenticationRequest
 {
     Connection = "Username-Password-Authentication",
     ClientId = ConfigurationManager.AppSettings["auth0:ClientId"],
@@ -53,7 +53,7 @@ var authResponse = await auth.Authenticate(new AuthenticationRequest
 This will contain the JWT token, which you use next to obtain information about the user:
 
 ```
-User user = await auth.GetTokenInfo(authResponse.IdToken);
+User user = await auth.GetTokenInfoAsync(authResponse.IdToken);
 ```
 
 Finally you need to construct a `ClaimsIdentity` and sign the user in:
