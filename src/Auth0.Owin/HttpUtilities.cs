@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
+﻿using System.Collections.Specialized;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 
 namespace Auth0.Owin
 {

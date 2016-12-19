@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.IdentityModel.Protocols;
 using System.IdentityModel.Tokens;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using Microsoft.IdentityModel.Protocols;
 
 namespace Auth0.Owin
 {
